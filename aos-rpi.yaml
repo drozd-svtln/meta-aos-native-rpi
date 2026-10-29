@@ -1,0 +1,597 @@
+desc: "AosCore build for Raspberry Pi 5 (Native / Non-Xen)"
+min_ver: "0.24"
+
+variables:
+  # Build configuration
+  YOCTOS_WORK_DIR: "yocto"
+
+  INSTALL_BUILD_DIR: "build-install"
+  OS_BUILD_DIR: "build-os-%{NODE_TYPE}"
+
+  # SELinux config
+  SELINUX_BOOT_ARGS: ""
+
+  # Aos config
+  AOS_UNIT_MODEL: "aos-native-rpi"
+  AOS_UNIT_VERSION: "1.0.0"
+
+  AOS_COMPONENT_RUNTIME_PREFIX: "%{AOS_UNIT_MODEL}-%{AOS_UNIT_VERSION}-%{NODE_TYPE}-%{MACHINE}-%{OS_ROOT}-"
+
+  # Version configuration
+  AOS_BUNDLE_IMAGE_VERSION: "2.1.1"
+  AOS_ROOTFS_REF_VERSION: "2.1.0"
+
+  # Aos node configuration
+  MAIN_NODE_HOSTNAME: "main"
+  MAIN_NODE_IP: "10.0.0.100"
+
+  AOS_BASE_IMAGE: "aos-image-rpi"
+  AOS_INSTALL_IMAGE: "core-image-minimal"
+
+  # Node info
+  AOS_ARCHITECTURE: "arm64"
+  AOS_ARCHITECTURE_VARIANT: ""
+  AOS_OS: "linux"
+  AOS_OS_VERSION: ""
+
+common_data:
+  common_yocto_sources: &COMMON_YOCTO_SOURCES
+    - type: git
+      url: "https://git.openembedded.org/openembedded-core"
+      rev: "wrynose"
+
+    - type: git
+      url: "https://git.openembedded.org/bitbake"
+      rev: "yocto-6.0"
+
+    - type: git
+      url: "https://git.openembedded.org/meta-openembedded"
+      rev: "wrynose"
+
+    - type: git
+      url: "https://git.yoctoproject.org/meta-virtualization"
+      rev: "wrynose"
+
+    - type: git
+      url: "https://git.yoctoproject.org/meta-security"
+      rev: "wrynose"
+
+    - type: git
+      url: "https://git.yoctoproject.org/meta-selinux"
+      rev: "wrynose"
+
+    - type: git
+      url: "https://github.com/drozd-svtln/meta-aos.git"
+      rev: "wrynose"
+    
+    - type: git
+      url: "https://github.com/drozd-svtln/meta-aos-native-rpi.git"
+      rev: "main"
+
+  common_conf: &COMMON_CONF
+    - [SSTATE_DIR, "${TOPDIR}/../../../common_data/sstate"]
+    - [DL_DIR, "${TOPDIR}/../../../common_data/downloads"]
+
+    # Init manager
+    - [INIT_MANAGER, "systemd"]
+
+    # Serial console
+    - [SERIAL_CONSOLES, "115200;ttyAMA0"]
+
+    # Skip warning about missing "virtualization" distro feature
+    - [SKIP_META_VIRT_SANITY_CHECK, "1"]
+
+    # Do not install kernel image to rootfs to decrease initrd size
+    - ["RDEPENDS_${KERNEL_PACKAGE_NAME}-base", ""]
+
+    # Distro features
+    - [
+        DISTRO_FEATURES:remove,
+        "x11 gtk gobject-introspection-data nfc irda zeroconf 3g sysvinit
+        acl alsa argp pcmcia usbgadget opengl ptest multiarch wayland
+        vulkan sysvinit xen",
+      ]
+    # Remove ptest to reduce the build time
+    - [DISTRO_FEATURES:remove, "ptest"]
+
+    # Enable security features
+    - [DISTRO_FEATURES:append, " security"]
+
+    # Allow compatibility with wrynose series for raspberrypi layer
+    - [LAYERSERIES_COMPAT_raspberrypi:append, " wrynose"]
+
+  os_common_layers: &OS_COMMON_LAYERS
+    - "../meta-virtualization"
+    - "../meta-openembedded/meta-oe"
+    - "../meta-openembedded/meta-networking"
+    - "../meta-openembedded/meta-perl"
+    - "../meta-openembedded/meta-python"
+    - "../meta-openembedded/meta-filesystems"
+    - "../meta-security"
+    - "../meta-selinux"
+    - "../meta-raspberrypi"
+    - "../meta-aos"
+    - "../meta-aos-native-rpi/meta-aos-native-rpi-common"
+
+  common_os_conf: &COMMON_OS_CONF
+    # Disable volatile log (replaces VOLATILE_LOG_DIR = "no")
+    - [FILESYSTEM_PERMS_TABLES:remove, "files/fs-perms-volatile-log.txt"]
+
+    # Generate ext4 image files
+    - [IMAGE_FSTYPES:append, " ext4"]
+
+    # Initramfs configuration
+    - [INITRAMFS_IMAGE, "aos-image-initramfs"]
+    - [INITRAMFS_IMAGE_BUNDLE, "1"]
+
+    # Unit model
+    - [AOS_UNIT_MODEL, "%{AOS_UNIT_MODEL}"]
+    - [AOS_UNIT_VERSION, "%{AOS_UNIT_VERSION}"]
+
+    # Image versions
+    - [AOS_ROOTFS_IMAGE_VERSION, "%{AOS_BUNDLE_IMAGE_VERSION}"]
+    - [AOS_BOOT_IMAGE_VERSION, "%{AOS_BUNDLE_IMAGE_VERSION}"]
+
+    # Requires to properly generate Aos FOTA
+    - [IMAGE_BASENAME, "%{AOS_BASE_IMAGE}"]
+
+components:
+  os:
+    default: true
+    build-dir: "%{YOCTOS_WORK_DIR}"
+    sources:
+      - *COMMON_YOCTO_SOURCES
+      - type: git
+        url: "https://git.yoctoproject.org/meta-raspberrypi"
+        rev: "wrynose"
+
+    builder:
+      type: yocto
+      base_distro: "openembedded-core"
+      work_dir: "%{OS_BUILD_DIR}"
+      conf:
+        - *COMMON_CONF
+        - *COMMON_OS_CONF
+        - [DISTRO, "aos-core"]
+        - [MACHINE, "%{MACHINE}"]
+        - [RPI_SOC_FAMILY, "%{SOC_FAMILY}"]
+        - [PREFERRED_VERSION_u-boot, "2024.04"]
+
+        # RPI specific
+        - [ENABLE_UART, "1"]
+        - [RPI_USE_U_BOOT, "1"]
+        - [PREFERRED_PROVIDER_u-boot-default-script, "u-boot-default-script"]
+        - [KERNEL_IMAGETYPE_UBOOT, "Image"]
+        - [
+            OS_BOOTARGS,
+            "console=ttyAMA0,115200 root=/dev/%{OS_BLK_DEV}1 rootfstype=ext4 rootwait quiet ro
+            cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 cgroup_enable=memory
+            ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '%{SELINUX_BOOT_ARGS}', '', d)}
+            vardir.disk=/dev/%{OS_BLK_DEV}2
+            opendisk.target=/dev/%{OS_BLK_DEV}3
+            opendisk.pkcs11=optee
+            aosupdate.disk=/dev/aosvg/workdirs
+            aosupdate.path=sm/runtimes/rootfs
+            ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', 'aosupdate.selinux_module=/usr/share/selinux/aos/base.pp', '', d)}",
+          ]
+        - [AOS_COMPONENT_RUNTIME_PREFIX, "%{AOS_COMPONENT_RUNTIME_PREFIX}"]
+        - [AOS_NODE_TYPE, "%{AOS_NODE_TYPE}"]
+        - [AOS_DNS_IP, "%{MAIN_NODE_IP}"]
+
+        - [AOS_ARCHITECTURE, "%{AOS_ARCHITECTURE}"]
+        - [AOS_ARCHITECTURE_VARIANT, "%{AOS_ARCHITECTURE_VARIANT}"]
+        - [AOS_OS, "%{AOS_OS}"]
+        - [AOS_OS_VERSION, "%{AOS_OS_VERSION}"]
+
+      build_target: "%{AOS_BASE_IMAGE}"
+      layers:
+        - *OS_COMMON_LAYERS
+
+      target_images:
+        - "tmp/deploy/images/%{MACHINE}/bootfiles"
+        - "tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+        - "tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
+        - "tmp/deploy/images/%{MACHINE}/boot.scr"
+        - "tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+        - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
+        - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}-var.ext4"
+        - "tmp/deploy/images/%{MACHINE}/aos/boot/version"
+        - "tmp/deploy/images/%{MACHINE}/aos/ta"
+
+  aos-sdk:
+    builder:
+      type: custom_script
+      work_dir: "workdir"
+      script: "../yocto/meta-aos/scripts/sdk_builder.py"
+      target_images:
+        - "../output/sdk"
+
+      additional_deps:
+        - "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
+
+      sdk:
+        yocto_dir: "../%{YOCTOS_WORK_DIR}"
+        build_dir: "%{OS_BUILD_DIR}"
+        output_dir: "../output/sdk"
+        base_image: "%{AOS_BASE_IMAGE}"
+
+  install:
+    default: true
+    build-dir: "%{YOCTOS_WORK_DIR}"
+    sources:
+      - *COMMON_YOCTO_SOURCES
+      - type: git
+        url: "https://git.yoctoproject.org/meta-raspberrypi"
+        rev: "wrynose"
+
+    builder:
+      type: yocto
+      base_distro: "openembedded-core"
+      work_dir: "%{INSTALL_BUILD_DIR}"
+      conf:
+        - *COMMON_CONF
+        - [MACHINE, "%{MACHINE}"]
+        - [CMDLINE_AOS_DISK, "%{OS_BLK_DEV}"]
+        - [LICENSE_FLAGS_ACCEPTED, "synaptics-killswitch"]
+
+        # Generate ext4 image files rpi-sdimg
+        - [IMAGE_FSTYPES, "rpi-sdimg"]
+        - [SDIMG_VFAT_DEPLOY, "1"]
+        - [SDIMG_ROOTFS_TYPE, "ext4"]
+        - [BOOT_SPACE, "262144"]
+        - [
+            RPI_SDIMG_EXTRA_DEPENDS,
+            "initramfs-aos-install:do_install rpi-cmdline:do_deploy rpi-config:do_deploy",
+          ]
+
+        # Initramfs configuration
+        - [INITRAMFS_IMAGE, "aos-install-initramfs"]
+        - [INITRAMFS_IMAGE_BUNDLE, "1"]
+        - [INITRAMFS_MAXSIZE, "524288"]
+
+        # RPI specific
+        - [ENABLE_UART, "1"]
+
+      build_target: "%{AOS_INSTALL_IMAGE}"
+      layers:
+        - "../meta-openembedded/meta-oe"
+        - "../meta-openembedded/meta-networking"
+        - "../meta-openembedded/meta-perl"
+        - "../meta-openembedded/meta-python"
+        - "../meta-raspberrypi"
+        - "../meta-aos-native-rpi/meta-aos-native-rpi-install"
+
+      target_images:
+        - "tmp/deploy/images/%{MACHINE}/%{AOS_INSTALL_IMAGE}-%{MACHINE}.rootfs.vfat"
+
+  install_archive:
+    build-dir: "%{INSTALL_BUILD_DIR}"
+    builder:
+      type: custom_script
+      args: "%{OS_ROOT}"
+      script: "../scripts/image_archive.sh"
+
+      additional_deps:
+        - "boot-%{NODE_TYPE}-%{OS_ROOT}.img"
+        - "rootfs-%{NODE_TYPE}-%{OS_ROOT}.img"
+
+      target_images:
+        - "../boot-%{NODE_TYPE}-%{OS_ROOT}.img.gz"
+        - "../rootfs-%{NODE_TYPE}-%{OS_ROOT}.img.gz"
+
+  layers:
+    builder:
+      type: custom_script
+      work_dir: "workdir"
+      script: "../yocto/meta-aos/scripts/layer_builder.py"
+      target_images:
+        - "../output/layers/config.yaml"
+        - "../output/layers/kuksa-client/%{AOS_OS}-%{AOS_ARCHITECTURE}-1.0.0.tar.gz"
+        - "../output/layers/pylibs/%{AOS_OS}-%{AOS_ARCHITECTURE}-1.0.0.tar.gz"
+        - "../output/layers/rpilibs/%{AOS_OS}-%{AOS_ARCHITECTURE}-1.0.0.tar.gz"
+
+      additional_deps:
+        - "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
+
+      layers:
+        architecture: "%{AOS_ARCHITECTURE}"
+        os: "%{AOS_OS}"
+        output_dir: "../output/layers"
+        publisher:
+          company: "EPAM Systems"
+
+        publish:
+          tlsKey: "aos-user-oem.p12"
+
+        yocto_dir: "../%{YOCTOS_WORK_DIR}"
+        build_dir: "%{OS_BUILD_DIR}"
+        base_image: "%{AOS_BASE_IMAGE}"
+        items:
+          kuksa-client:
+            target: "aos-kuksa-client-layer"
+            version: "1.0.0"
+
+          pylibs:
+            target: "aos-pylibs-layer"
+            version: "1.0.0"
+
+          rpilibs:
+            target: "aos-rpilibs-layer"
+            version: "1.0.0"
+
+  fota:
+    builder:
+      type: custom_script
+      work_dir: "workdir"
+      script: "../yocto/meta-aos/scripts/fota_builder.py"
+      target_images:
+        - "../output/fota"
+
+      additional_deps:
+        - "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
+
+      components:
+        architecture: "%{AOS_ARCHITECTURE}"
+        os: "%{AOS_OS}"
+        output_dir: "../output/fota"
+        publisher:
+          company: "EPAM Systems"
+
+        publish:
+          tlsKey: "aos-user-oem.p12"
+
+        work_dir: "workdir"
+        items:
+          rootfs-full:
+            componentType: "%{AOS_COMPONENT_RUNTIME_PREFIX}rootfs"
+            mediaType: "application/vnd.aos.image.component.full.v1+squashfs"
+            enabled: true
+            method: "overlay"
+            ostree_repo: "../../ostree_repo/%{AOS_NODE_TYPE}-rootfs"
+            yocto_dir: "../%{YOCTOS_WORK_DIR}"
+            build_dir: "%{OS_BUILD_DIR}"
+            type: "full"
+            title: "Aos RPI %{AOS_NODE_TYPE} rootfs full image"
+            description: "Aos RPI %{AOS_NODE_TYPE} rootfs full image for ${MACHINE}"
+            version: "%{AOS_BUNDLE_IMAGE_VERSION}"
+            fileName: "%{AOS_NODE_TYPE}-rootfs-full-%{AOS_BUNDLE_IMAGE_VERSION}.squashfs"
+            exclude:
+              - "home/*"
+              - "var/*"
+
+          rootfs-incremental:
+            componentType: "%{AOS_COMPONENT_RUNTIME_PREFIX}rootfs"
+            mediaType: "application/vnd.aos.image.component.inc.v1+squashfs"
+            enabled: false
+            method: "overlay"
+            ostree_repo: "../../ostree_repo/%{AOS_NODE_TYPE}-rootfs"
+            yocto_dir: "../%{YOCTOS_WORK_DIR}"
+            build_dir: "%{OS_BUILD_DIR}"
+            type: "incremental"
+            title: "Aos RPI %{AOS_NODE_TYPE} rootfs incremental image"
+            description: "Aos RPI %{AOS_NODE_TYPE} rootfs incremental image for ${MACHINE}"
+            version: "%{AOS_BUNDLE_IMAGE_VERSION}"
+            requiredVersion: "%{AOS_ROOTFS_REF_VERSION}"
+            fileName: "%{AOS_NODE_TYPE}-rootfs-incremental-%{AOS_BUNDLE_IMAGE_VERSION}.squashfs"
+            exclude:
+              - "home/*"
+              - "var/*"
+
+images:
+  boot-%{NODE_TYPE}-%{OS_ROOT}:
+    type: gpt
+    desc: "Full RPI image"
+    sector_size: 512
+    partitions:
+      boot:
+        gpt_type: ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+        type: vfat
+        size: 512 MiB
+        items:
+          "/": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bootfiles"
+          "Image.gz": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+          "u-boot": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
+          "boot.scr": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/boot.scr"
+          "bcm2712-rpi-5-b.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+          "aos/version": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/aos/boot/version"
+
+  rootfs-%{NODE_TYPE}-%{OS_ROOT}:
+    type: gpt
+    desc: "Full RPI image"
+    sector_size: 512
+    partitions:
+      os_rootfs:
+        gpt_type: B921B045-1DF0-41C3-AF44-4C6F280D3FAE
+        type: raw_image
+        image_path: "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
+
+      os_var:
+        gpt_type: B921B045-1DF0-41C3-AF44-4C6F280D3FAE
+        type: raw_image
+        image_path: "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}-var.ext4"
+
+      os_aos:
+        gpt_type: CA7D7CCB-63ED-4C53-861C-1742536059CC
+        type: empty
+        size: 16384 MiB
+
+  install-%{NODE_TYPE}-%{OS_ROOT}:
+    type: gpt
+    desc: "Full RPI image"
+    sector_size: 512
+    partitions:
+      boot:
+        gpt_type: C12A7328-F81F-11D2-BA4B-00A0C93EC93B
+        type: raw_image
+        sparse: false
+        image_path: "%{YOCTOS_WORK_DIR}/%{INSTALL_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/%{AOS_INSTALL_IMAGE}-%{MACHINE}.rootfs.vfat"
+
+      install:
+        gpt_type: ebd0a0a2-b9e5-4433-87c0-68b6b72699c7
+        type: ext4
+        size: 512 MiB
+        items:
+          "boot.img.gz": "boot-%{NODE_TYPE}-%{OS_ROOT}.img.gz"
+          "rootfs.img.gz": "rootfs-%{NODE_TYPE}-%{OS_ROOT}.img.gz"
+
+parameters:
+  MACHINE:
+    desc: "Raspberry Pi machine"
+    rpi5:
+      default: true
+      overrides:
+        variables:
+          MACHINE: "raspberrypi5"
+          SOC_FAMILY: "bcm2712"
+
+  NODE_TYPE:
+    desc: "Node type to build"
+    "single":
+      default: true
+      overrides:
+        variables:
+          AOS_NODE_TYPE: "%{AOS_UNIT_MODEL}-single"
+          NODE_TYPE: "single"
+
+        components:
+          os:
+            builder:
+              conf:
+                - [AOS_MAIN_NODE, "1"]
+                - [AOS_NODE_IP, "%{MAIN_NODE_IP}/24"]
+                - [AOS_USE_DHCP, "1"]
+                - [AOS_HOSTS:append, " %{MAIN_NODE_IP}=%{MAIN_NODE_HOSTNAME}"]
+
+              layers:
+                - "../meta-aos-native-rpi/meta-aos-native-rpi-main"
+
+    "main":
+      overrides:
+        variables:
+          AOS_NODE_TYPE: "%{AOS_UNIT_MODEL}-main"
+          NODE_TYPE: "main"
+
+        components:
+          os:
+            builder:
+              conf:
+                - [AOS_MAIN_NODE, "1"]
+                - [AOS_NODE_IP, "%{MAIN_NODE_IP}/24"]
+                - [AOS_NODE_GW_IP, "10.0.0.1"]
+                - [AOS_USE_DHCP, "0"]
+                - [AOS_HOSTS:append, " %{MAIN_NODE_IP}=%{MAIN_NODE_HOSTNAME}"]
+
+              layers:
+                - "../meta-aos-native-rpi/meta-aos-native-rpi-main"
+
+    "secondary":
+      overrides:
+        variables:
+          AOS_NODE_TYPE: "%{AOS_UNIT_MODEL}-secondary"
+          NODE_TYPE: "secondary"
+
+        components:
+          os:
+            builder:
+              conf:
+                - [AOS_MAIN_NODE, "0"]
+                - [AOS_USE_DHCP, "1"]
+
+              layers:
+                - "../meta-aos-native-rpi/meta-aos-native-rpi-node"
+
+  DEBUG_TWEAKS:
+    desc: "Allow configure build with debug-tweaks."
+    disabled:
+      default: true
+
+    enabled:
+      default: false
+      overrides:
+        common_data:
+          common_conf:
+            - [EXTRA_IMAGE_FEATURES:append, " allow-empty-password allow-root-login empty-root-password post-install-logging"]
+
+  OS_ROOT:
+    desc: "OS root device"
+    usb:
+      default: true
+      overrides:
+        variables:
+          OS_ROOT: usb
+          OS_BLK_DEV: "sda"
+
+    nvme:
+      overrides:
+        variables:
+          OS_ROOT: nvme
+          OS_BLK_DEV: "nvme0n1p"
+
+  SELINUX:
+    desc: "Enables SELinux"
+    enabled:
+      overrides:
+        variables:
+          SELINUX_BOOT_ARGS: "security=selinux"
+
+        common_data:
+          common_os_conf:
+            - [DISTRO_FEATURES:append, " acl xattr pam selinux"]
+            - [FIRST_BOOT_RELABEL, "1"]
+            - [PREFERRED_PROVIDER_virtual/refpolicy, "refpolicy-aos"]
+            - [
+                "SKIP_RECIPE[uutils-coreutils]",
+                "it caused build issue and we don't need it",
+              ]
+
+    permissive:
+      overrides:
+        variables:
+          SELINUX_BOOT_ARGS: "security=selinux enforcing=0"
+
+        common_data:
+          common_os_conf:
+            - [DISTRO_FEATURES:append, " acl xattr pam selinux"]
+            - [FIRST_BOOT_RELABEL, "1"]
+            - [PREFERRED_PROVIDER_virtual/refpolicy, "refpolicy-aos"]
+            - [
+                "SKIP_RECIPE[uutils-coreutils]",
+                "it caused build issue and we don't need it",
+              ]
+
+    disabled:
+      default: true
+
+  WITH_BENCHMARK:
+    desc: "Enable benchmark tools"
+    yes:
+      overrides:
+        common_data:
+          common_conf:
+            - [DISTRO_FEATURES:append, " benchmark"]
+
+    no:
+      default: true
+
+  WITH_FASTDDS:
+    desc: "Enable Fast DDS"
+    "yes":
+      overrides:
+        common_data:
+          common_conf:
+            - [DISTRO_FEATURES:append, " fastdds"]
+
+    "no":
+      default: true
+
+  CACHE_LOCATION:
+    desc: "Indicated where cache and downloads are stored: inside build dir or outside."
+    outside:
+      default: true
+
+    inside:
+      overrides:
+        common_data:
+          common_conf:
+            - [SSTATE_DIR, "${TOPDIR}/../../common_data/sstate"]
+            - [DL_DIR, "${TOPDIR}/../../common_data/downloads"]

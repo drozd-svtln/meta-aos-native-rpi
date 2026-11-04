@@ -61,9 +61,13 @@ common_data:
       rev: "wrynose"
 
     - type: git
+      url: "https://git.yoctoproject.org/meta-arm"
+      rev: "wrynose"
+
+    - type: git
       url: "https://github.com/drozd-svtln/meta-aos.git"
       rev: "wrynose"
-    
+
     - type: git
       url: "https://github.com/drozd-svtln/meta-aos-native-rpi.git"
       rev: "main"
@@ -100,6 +104,9 @@ common_data:
     # Allow compatibility with wrynose series for raspberrypi layer
     - [LAYERSERIES_COMPAT_raspberrypi:append, " wrynose"]
 
+    # Move TMPDIR to a native container path to avoid volume mount limits & boost I/O
+    - [TMPDIR, "/home/builder/oe-tmp/%{OS_BUILD_DIR}"]
+
   os_common_layers: &OS_COMMON_LAYERS
     - "../meta-virtualization"
     - "../meta-openembedded/meta-oe"
@@ -112,6 +119,8 @@ common_data:
     - "../meta-raspberrypi"
     - "../meta-aos"
     - "../meta-aos-native-rpi/meta-aos-native-rpi-common"
+    - "../meta-arm/meta-arm"
+    - "../meta-arm/meta-arm-toolchain"
 
   common_os_conf: &COMMON_OS_CONF
     # Disable volatile log (replaces VOLATILE_LOG_DIR = "no")
@@ -155,7 +164,7 @@ components:
         - [DISTRO, "aos-core"]
         - [MACHINE, "%{MACHINE}"]
         - [RPI_SOC_FAMILY, "%{SOC_FAMILY}"]
-        - [PREFERRED_VERSION_u-boot, "2024.04"]
+        - [PREFERRED_VERSION_u-boot, "1:2026.01%"]
 
         # RPI specific
         - [ENABLE_UART, "1"]

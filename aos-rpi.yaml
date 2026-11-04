@@ -165,6 +165,7 @@ components:
         - [MACHINE, "%{MACHINE}"]
         - [RPI_SOC_FAMILY, "%{SOC_FAMILY}"]
         - [PREFERRED_VERSION_u-boot, "1:2026.01%"]
+        - [LICENSE_FLAGS_ACCEPTED, "synaptics-killswitch"]
 
         # RPI specific
         - [ENABLE_UART, "1"]

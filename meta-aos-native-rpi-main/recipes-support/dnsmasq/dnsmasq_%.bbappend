@@ -1,7 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-S = "${UNPACKDIR}"
-
 SRC_URI += "file://dnsmasq.conf.in"
 FILES:${PN} += "/var/aos/dns/* /etc/aos/addnhosts"
 

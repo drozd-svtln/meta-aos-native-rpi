@@ -1,5 +1,7 @@
 require optee.inc
 
+OPTEE_PLATFORM = "rpi5"
+
 EXTRA_OEMAKE += "\
     CFG_PKCS11_TA_HEAP_SIZE="(256 * 1024)" \
 "

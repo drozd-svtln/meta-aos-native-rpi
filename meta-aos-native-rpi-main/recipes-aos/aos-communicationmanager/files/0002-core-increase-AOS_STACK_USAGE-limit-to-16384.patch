@@ -1,0 +1,36 @@
+From c48219e9798cbe04610489e3b475e3a268ed40fc Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 19:07:45 +0200
+Subject: [PATCH] core: increase AOS_STACK_USAGE limit to 16384
+
+GCC 15 and updated toolchain code generation result in slightly larger
+stack frames for complex functions (such as
+ImageManager::ProcessDownloadRequest and CleanupOrphanedBlobs),
+exceeding the strict 8192-byte stack-usage limit and causing build
+failures under -Werror.
+
+Increase AOS_STACK_USAGE to 16384 bytes to accommodate these frames
+cleanly without disabling stack usage checks entirely.
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b7c041ab..44cd2d49 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -80,7 +80,7 @@ set(WITH_OPENSSL ON)
+ # Config
+ # ######################################################################################################################
+ 
+-set(AOS_STACK_USAGE 8192)
++set(AOS_STACK_USAGE 16384)
+ 
+ get_filename_component(AOS_CORE_LIB_DIR ${AOS_CORE_DIR}/aos_core_lib_cpp REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+ get_filename_component(AOS_CORE_API_DIR ${AOS_CORE_DIR}/aos_core_api REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+-- 
+2.43.0
+

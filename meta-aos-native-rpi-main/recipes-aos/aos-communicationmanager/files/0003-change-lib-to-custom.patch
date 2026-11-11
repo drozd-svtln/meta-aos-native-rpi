@@ -1,0 +1,29 @@
+From daf7291ebd2be579518c123e095c5054d63f8a9b Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 21:44:11 +0200
+Subject: [PATCH] change lib to custom
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ CMakeLists.txt | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 44cd2d49..bf4d5c75 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -112,8 +112,8 @@ include(FetchContent)
+ if(NOT EXISTS ${AOS_CORE_LIB_DIR})
+     FetchContent_Populate(
+         aos_core_lib_cpp
+-        GIT_REPOSITORY https://github.com/aosedge/aos_core_lib_cpp.git
+-        GIT_TAG v9.1.2
++        GIT_REPOSITORY https://github.com/drozd-svtln/aos_core_lib_cpp.git
++        GIT_TAG main
+         SOURCE_DIR ${AOS_CORE_LIB_DIR}
+     )
+ endif()
+-- 
+2.43.0
+

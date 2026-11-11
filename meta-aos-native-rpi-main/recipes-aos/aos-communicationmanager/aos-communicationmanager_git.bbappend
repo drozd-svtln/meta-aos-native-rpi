@@ -8,6 +8,7 @@ SRC_URI += "\
     file://0004-fix-deprecated-declarations-warnings.patch \
     file://0005-depracated-2.patch \
     file://0006-deprecated-3.patch \
+    file://0007-fix-Z_BEST_COMPRESSION-not-declared.patch \
 "
 
 EXTRA_OECMAKE += "-DCMAKE_CXX_FLAGS='-Wno-error=deprecated-declarations -Wno-stack-usage'"

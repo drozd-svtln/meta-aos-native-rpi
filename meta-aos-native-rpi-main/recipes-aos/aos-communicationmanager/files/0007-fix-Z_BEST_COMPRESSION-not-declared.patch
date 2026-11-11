@@ -1,0 +1,26 @@
+From 9acd198072c0caf756ffdf0850d3b1dbb8bb38f2 Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 23:51:49 +0200
+Subject: [PATCH] fix Z_BEST_COMPRESSION not declared
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/common/logging/archiver.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/common/logging/archiver.cpp b/src/common/logging/archiver.cpp
+index 56e9f94f..64af3e5b 100644
+--- a/src/common/logging/archiver.cpp
++++ b/src/common/logging/archiver.cpp
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <Poco/Zip/Compress.h>
++#include <zlib.h>
+ 
+ #include <core/common/tools/logger.hpp>
+ 
+-- 
+2.43.0
+

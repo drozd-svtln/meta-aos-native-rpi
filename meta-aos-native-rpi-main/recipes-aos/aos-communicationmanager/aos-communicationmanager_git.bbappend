@@ -5,7 +5,7 @@ SRC_URI += "\
     file://0001-common-utils-fswatcher-fix-compilation-with-GCC-15.patch \
 "
 
-EXTRA_OECMAKE += "-DCMAKE_CXX_FLAGS='-Wno-error=deprecated-declarations -Wno-error=stack-usage -Wstack-usage=16384'"
+EXTRA_OECMAKE += "-DCMAKE_CXX_FLAGS='-Wno-error=deprecated-declarations -Wno-stack-usage'"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/aos-cm.service.d

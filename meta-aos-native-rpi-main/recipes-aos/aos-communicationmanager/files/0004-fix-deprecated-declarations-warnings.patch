@@ -1,0 +1,59 @@
+From aab2a273e54abb94dfb2cfcf4068268e53e467da Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 22:19:15 +0200
+Subject: [PATCH] fix deprecated-declarations warnings
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/common/utils/grpchelper.cpp | 16 ++++++++--------
+ 1 file changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/src/common/utils/grpchelper.cpp b/src/common/utils/grpchelper.cpp
+index 873024d3..2bf055b8 100644
+--- a/src/common/utils/grpchelper.cpp
++++ b/src/common/utils/grpchelper.cpp
+@@ -58,11 +58,11 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetMTLS
+     }
+ 
+     auto keyCertPair
+-        = grpc::experimental::IdentityKeyCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
++        = grpc::experimental::IdentityKeyOrSignerCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
+ 
+-    std::vector<grpc::experimental::IdentityKeyCertPair> keyCertPairs = {keyCertPair};
++    std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> keyCertPairs = {keyCertPair};
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(rootCert, keyCertPairs);
++    return std::make_shared<grpc::experimental::InMemoryCertificateProvider>(rootCert, keyCertPairs);
+ }
+ 
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSServerCertificates(
+@@ -72,11 +72,11 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSS
+     AOS_ERROR_CHECK_AND_THROW(err, "Load certificate by URL failed");
+ 
+     auto keyCertPair
+-        = grpc::experimental::IdentityKeyCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
++        = grpc::experimental::IdentityKeyOrSignerCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
+ 
+-    std::vector<grpc::experimental::IdentityKeyCertPair> keyCertPairs = {keyCertPair};
++    std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> keyCertPairs = {keyCertPair};
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(keyCertPairs);
++    return std::make_shared<grpc::experimental::InMemoryCertificateProvider>(keyCertPairs);
+ }
+ 
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSClientCertificates(
+@@ -92,8 +92,8 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSC
+         AOS_ERROR_THROW(ErrorEnum::eInvalidArgument, "root certificate file is empty");
+     }
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(
+-        rootCert, std::vector<grpc::experimental::IdentityKeyCertPair> {});
++    return std::make_shared<grpc::experimental::InMemoryCertificateProvider>(
++        rootCert, std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> {});
+ }
+ 
+ /***********************************************************************************************************************
+-- 
+2.43.0
+

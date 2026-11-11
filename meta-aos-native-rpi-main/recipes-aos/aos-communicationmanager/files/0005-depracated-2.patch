@@ -1,0 +1,92 @@
+From c31b544609358f9344bafca77fb72a9e71c4cb8b Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 22:28:51 +0200
+Subject: [PATCH] depracated 2
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/common/utils/grpchelper.cpp | 32 +++++++++++++++++++++++---------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
+
+diff --git a/src/common/utils/grpchelper.cpp b/src/common/utils/grpchelper.cpp
+index 2bf055b8..bd45f5a1 100644
+--- a/src/common/utils/grpchelper.cpp
++++ b/src/common/utils/grpchelper.cpp
+@@ -62,7 +62,9 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetMTLS
+
+     std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> keyCertPairs = {keyCertPair};
+
+-    return std::make_shared<grpc::experimental::InMemoryCertificateProvider>(rootCert, keyCertPairs);
++    return std::shared_ptr<grpc::experimental::CertificateProviderInterface>(
++        new grpc::experimental::InMemoryCertificateProvider(rootCert, keyCertPairs)
++    );
+ }
+
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSServerCertificates(
+@@ -107,12 +109,18 @@ std::shared_ptr<grpc::ServerCredentials> GetMTLSServerCredentials(const CertInfo
+ {
+     auto certificates = GetMTLSCertificates(certInfo, rootCertPath, certLoader, cryptoProvider);
+
+-    grpc::experimental::TlsServerCredentialsOptions options {certificates};
++    auto optionsOr = grpc::experimental::TlsServerCredentialsOptions::Create(certificates);
++    if (!optionsOr.ok()) {
++        // Handle error or return nullptr/appropriate error status
++        return nullptr;
++    }
++
++    auto& options = *optionsOr;
+
+     options.set_cert_request_type(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
+-    options.watch_identity_key_cert_pairs();
++    options.set_root_certificate_provider();
++    options.set_identity_certificate_provider(certificates);
+     options.set_root_cert_name("root");
+     options.set_identity_cert_name("identity");
+
+@@ -124,11 +132,17 @@ std::shared_ptr<grpc::ServerCredentials> GetTLSServerCredentials(
+ {
+     auto certificates = GetTLSServerCertificates(certInfo, certLoader, cryptoProvider);
+
+-    grpc::experimental::TlsServerCredentialsOptions options {certificates};
++    auto optionsOr = grpc::experimental::TlsServerCredentialsOptions::Create(certificates);
++    if (!optionsOr.ok()) {
++        // Handle error or return nullptr/appropriate error status
++        return nullptr;
++    }
++
++    auto& options = *optionsOr;
+
+     options.set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
+     options.set_check_call_host(false);
+-    options.watch_identity_key_cert_pairs();
++    options.set_identity_certificate_provider(certificates);
+     options.set_identity_cert_name("identity");
+
+     return grpc::experimental::TlsServerCredentials(options);
+@@ -144,9 +158,9 @@ std::shared_ptr<grpc::ChannelCredentials> GetMTLSClientCredentials(const CertInf
+     options.set_verify_server_certs(true);
+
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
++    options.set_root_certificate_provider();
+     options.set_root_cert_name("root");
+-    options.watch_identity_key_cert_pairs();
++    options.set_identity_certificate_provider(certificates);
+     options.set_identity_cert_name("identity");
+
+     return grpc::experimental::TlsCredentials(options);
+@@ -161,7 +175,7 @@ std::shared_ptr<grpc::ChannelCredentials> GetTLSClientCredentials(const aos::Str
+     options.set_verify_server_certs(true);
+
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
++    options.set_root_certificate_provider();
+     options.set_root_cert_name("root");
+
+     return grpc::experimental::TlsCredentials(options);
+--
+2.43.0
+

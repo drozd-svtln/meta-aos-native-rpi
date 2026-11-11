@@ -1,0 +1,40 @@
+From 904518c3efeba726007428b6445ec24c2d53e663 Mon Sep 17 00:00:00 2001
+From: Isolated Builder <builder@example.com>
+Date: Wed, 11 Nov 2026 19:16:53 +0000
+Subject: [PATCH] sm: launcher: avoid capturing structures bindings
+
+Signed-off-by: Isolated Builder <builder@example.com>
+---
+ src/core/sm/launcher/launcher.cpp | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/src/core/sm/launcher/launcher.cpp b/src/core/sm/launcher/launcher.cpp
+index 8af080aa..c5b2ec91 100644
+--- a/src/core/sm/launcher/launcher.cpp
++++ b/src/core/sm/launcher/launcher.cpp
+@@ -661,6 +661,10 @@ void Launcher::LoadInstancesData(const Array<InstanceInfo>& storedInstances)
+     }
+ 
+     for (const auto& instanceInfo : storedInstances) {
++	auto [rawInstanceData, resErr] = AddInstanceData(instanceInfo);
++        auto instanceData = rawInstanceData;
++        auto err = resErr;
++
+         auto [instanceData, err] = AddInstanceData(instanceInfo);
+         if (!err.IsNone()) {
+             LOG_ERR() << "Failed to add instance data" << Log::Field("instance", instanceInfo)
+@@ -674,9 +678,9 @@ void Launcher::LoadInstancesData(const Array<InstanceInfo>& storedInstances)
+         }
+ 
+         if (err = mLaunchPool.AddTask([this, instanceData](void*) {
+-                if (auto err = LoadInstanceData(*instanceData); !err.IsNone()) {
++		if (auto loadErr = LoadInstanceData(*instanceData); !loadErr.IsNone()) {
+                     LOG_ERR() << "Failed to load instance data" << Log::Field("instance", instanceData->mInfo)
+-                              << Log::Field(AOS_ERROR_WRAP(err));
++                              << Log::Field(AOS_ERROR_WRAP(loadErr));
+                 }
+             });
+             !err.IsNone()) {
+-- 
+2.34.1
+

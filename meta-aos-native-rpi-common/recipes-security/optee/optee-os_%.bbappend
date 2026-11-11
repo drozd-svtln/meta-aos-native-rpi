@@ -1,5 +1,8 @@
 require optee.inc
 
+EXTRA_OEMAKE:remove = "PLATFORM=raspberrypi5"
+EXTRA_OEMAKE:append = " PLATFORM=rpi5"
+
 EXTRA_OEMAKE += "\
     CFG_PKCS11_TA_HEAP_SIZE="(256 * 1024)" \
 "

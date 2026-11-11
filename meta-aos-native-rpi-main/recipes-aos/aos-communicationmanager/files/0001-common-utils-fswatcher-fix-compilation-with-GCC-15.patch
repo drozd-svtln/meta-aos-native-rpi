@@ -1,0 +1,32 @@
+From 0129e0596da21e0ca1c8def589af8f126ab7584f Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 17:30:15 +0200
+Subject: [PATCH 1/2] common: utils: fswatcher: fix compilation with GCC 15
+
+GCC 15 enforces stricter header hygiene and no longer transitively
+includes standard library headers, causing compilation errors due to a
+missing `#include <algorithm>` for `std::find` and `std::find_if` in `fswatcher.cpp`.
+
+Explicitly include `<algorithm>` to resolve build failures under the
+Wrynose release toolchain.
+
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/common/utils/fswatcher.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/src/common/utils/fswatcher.cpp b/src/common/utils/fswatcher.cpp
+index 55c93402..e7c671d9 100644
+--- a/src/common/utils/fswatcher.cpp
++++ b/src/common/utils/fswatcher.cpp
+@@ -16,6 +16,7 @@
+ #include <sys/inotify.h>
+ #include <unistd.h>
+ #include <vector>
++#include <algorithm>
+ 
+ #include <Poco/UUID.h>
+ #include <Poco/UUIDGenerator.h>
+-- 
+2.43.0
+

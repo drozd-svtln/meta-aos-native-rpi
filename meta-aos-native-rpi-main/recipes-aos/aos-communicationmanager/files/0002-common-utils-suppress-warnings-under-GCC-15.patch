@@ -1,0 +1,37 @@
+From a2854c3196ea8973b808da46594130f50a418346 Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Wed, 11 Nov 2026 17:33:36 +0200
+Subject: [PATCH 2/2] common: utils: suppress warnings under GCC 15
+
+GCC 15 and updated gRPC headers introduce deprecation warnings on
+experimental TLS credential APIs (e.g., StaticDataCertificateProvider,
+IdentityKeyCertPair), which fail the build under strict -Werror
+enforcement in the Wrynose toolchain.
+
+Target the utils library in CMake to allow deprecation warnings without
+failing the build by selectively appending
+`-Wno-error=deprecated-declarations` when compiled with GNU compilers.
+
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/common/utils/CMakeLists.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/common/utils/CMakeLists.txt b/src/common/utils/CMakeLists.txt
+index 2f647840..096d9f85 100644
+--- a/src/common/utils/CMakeLists.txt
++++ b/src/common/utils/CMakeLists.txt
+@@ -57,6 +57,10 @@ add_module(
+     ${LIBRARIES}
+ )
+ 
++if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
++    target_compile_options(${TARGET_NAME} PRIVATE -Wno-error=deprecated-declarations)
++fi()
++
+ # ######################################################################################################################
+ # Tests
+ # ######################################################################################################################
+-- 
+2.43.0
+

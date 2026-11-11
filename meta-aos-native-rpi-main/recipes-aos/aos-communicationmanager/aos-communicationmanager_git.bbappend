@@ -1,7 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-S = "${UNPACKDIR}"
-
 SRC_URI += "\
     file://optee-identity.conf \
 "

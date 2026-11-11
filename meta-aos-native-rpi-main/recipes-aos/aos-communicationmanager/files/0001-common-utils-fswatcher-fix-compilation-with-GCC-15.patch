@@ -10,6 +10,7 @@ missing `#include <algorithm>` for `std::find` and `std::find_if` in `fswatcher.
 Explicitly include `<algorithm>` to resolve build failures under the
 Wrynose release toolchain.
 
+Upstream-Status: Pending
 Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
 ---
  src/common/utils/fswatcher.cpp | 1 +

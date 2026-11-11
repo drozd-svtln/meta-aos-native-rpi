@@ -12,6 +12,7 @@ Target the utils library in CMake to allow deprecation warnings without
 failing the build by selectively appending
 `-Wno-error=deprecated-declarations` when compiled with GNU compilers.
 
+Upstream-Status: Inappropriate [local toolchain workaround]
 Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
 ---
  src/common/utils/CMakeLists.txt | 4 ++++

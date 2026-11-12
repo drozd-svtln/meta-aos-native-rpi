@@ -8,6 +8,7 @@ SRC_URI += "\
     file://resources.cfg \
     file://resources-benchmark.cfg \
     file://0001-fix-for-gcc-15.patch \
+    file://0002-fix-for-gcc-15-part-2.patch \
 "
 
 FILES:${PN} += " \

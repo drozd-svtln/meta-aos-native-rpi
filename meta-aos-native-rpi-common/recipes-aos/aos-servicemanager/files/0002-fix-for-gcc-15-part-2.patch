@@ -1,0 +1,60 @@
+From b550325e7afabe62227561d6cba80c446f2fa189 Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Thu, 12 Nov 2026 17:03:35 +0200
+Subject: [PATCH] fix for gcc 15 (part 2)
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/sm/launcher/runtimes/boot/efibootcontroller.cpp     | 4 +++-
+ src/sm/launcher/runtimes/container/filesystem.cpp       | 1 +
+ src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp | 2 ++
+ 3 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/src/sm/launcher/runtimes/boot/efibootcontroller.cpp b/src/sm/launcher/runtimes/boot/efibootcontroller.cpp
+index 2fddae81..3c342535 100644
+--- a/src/sm/launcher/runtimes/boot/efibootcontroller.cpp
++++ b/src/sm/launcher/runtimes/boot/efibootcontroller.cpp
+@@ -60,11 +60,13 @@ RetWithError<size_t> EFIBootController::GetCurrentBoot() const
+ {
+     std::lock_guard lock {mMutex};
+ 
+-    auto [efiCurrentBoot, err] = GetBootCurrent();
++    auto [bootVal, err] = GetBootCurrent();
+     if (!err.IsNone()) {
+         return {0, AOS_ERROR_WRAP(err)};
+     }
+ 
++    size_t efiCurrentBoot = bootVal;
++
+     LOG_DBG() << "Get EFI current boot" << Log::Field("bootID", efiCurrentBoot);
+ 
+     auto itBootItem = std::find_if(mBootItems.begin(), mBootItems.end(),
+diff --git a/src/sm/launcher/runtimes/container/filesystem.cpp b/src/sm/launcher/runtimes/container/filesystem.cpp
+index cd198b5d..edefd6c2 100644
+--- a/src/sm/launcher/runtimes/container/filesystem.cpp
++++ b/src/sm/launcher/runtimes/container/filesystem.cpp
+@@ -14,6 +14,7 @@
+ #include <sys/stat.h>
+ #include <sys/sysmacros.h>
+ #include <unistd.h>
++#include <algorithm>
+ 
+ #include <core/common/tools/logger.hpp>
+ 
+diff --git a/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp b/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
+index d1ba5f17..a61d9367 100644
+--- a/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
++++ b/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
+@@ -6,6 +6,8 @@
+ 
+ #include <unordered_map>
+ 
++#include <algorithm>
++
+ #include <common/utils/retry.hpp>
+ #include <core/common/tools/logger.hpp>
+ 
+-- 
+2.43.0
+

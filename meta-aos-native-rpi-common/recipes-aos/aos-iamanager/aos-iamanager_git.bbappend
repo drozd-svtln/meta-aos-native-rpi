@@ -1,7 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-S = "${UNPACKDIR}"
-
 SRC_URI:append = " \
     file://optee-identity.conf \
     file://grpc-dns-resolver.conf \

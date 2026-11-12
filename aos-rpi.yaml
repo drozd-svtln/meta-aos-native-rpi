@@ -164,6 +164,7 @@ components:
         - [DISTRO, "aos-core"]
         - [MACHINE, "%{MACHINE}"]
         - [RPI_SOC_FAMILY, "%{SOC_FAMILY}"]
+        - [OS_NAME, "native"]
         - [PREFERRED_VERSION_u-boot, "1:2026.01%"]
         - [LICENSE_FLAGS_ACCEPTED, "synaptics-killswitch"]
 

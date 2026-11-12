@@ -1,4 +1,4 @@
-IMAGE_NAME = "initramfs-${NODE_TYPE}"
+IMAGE_NAME = "initramfs-${OS_NAME}"
 IMAGE_NAME_SUFFIX = ""
 
 AOS_INITRAMFS_SCRIPTS += "\

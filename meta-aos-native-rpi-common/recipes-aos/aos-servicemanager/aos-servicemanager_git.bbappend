@@ -7,6 +7,7 @@ SRC_URI += "\
     file://grpc-dns-resolver.conf \
     file://resources.cfg \
     file://resources-benchmark.cfg \
+    file://0001-fix-for-gcc-15.patch \
 "
 
 FILES:${PN} += " \

@@ -1,0 +1,203 @@
+From a17418e75bb4b9c82b7364abba671f88dbec959a Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Thu, 12 Nov 2026 13:41:34 +0200
+Subject: [PATCH] fix for gcc 15
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ CMakeLists.txt                  |  6 ++--
+ src/common/logging/archiver.cpp |  1 +
+ src/common/utils/fswatcher.cpp  |  1 +
+ src/common/utils/grpchelper.cpp | 60 ++++++++++++++++++++++-----------
+ 4 files changed, 45 insertions(+), 23 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index b7c041ab..bf4d5c75 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -80,7 +80,7 @@ set(WITH_OPENSSL ON)
+ # Config
+ # ######################################################################################################################
+ 
+-set(AOS_STACK_USAGE 8192)
++set(AOS_STACK_USAGE 16384)
+ 
+ get_filename_component(AOS_CORE_LIB_DIR ${AOS_CORE_DIR}/aos_core_lib_cpp REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+ get_filename_component(AOS_CORE_API_DIR ${AOS_CORE_DIR}/aos_core_api REALPATH BASE_DIR "${CMAKE_BINARY_DIR}")
+@@ -112,8 +112,8 @@ include(FetchContent)
+ if(NOT EXISTS ${AOS_CORE_LIB_DIR})
+     FetchContent_Populate(
+         aos_core_lib_cpp
+-        GIT_REPOSITORY https://github.com/aosedge/aos_core_lib_cpp.git
+-        GIT_TAG v9.1.2
++        GIT_REPOSITORY https://github.com/drozd-svtln/aos_core_lib_cpp.git
++        GIT_TAG main
+         SOURCE_DIR ${AOS_CORE_LIB_DIR}
+     )
+ endif()
+diff --git a/src/common/logging/archiver.cpp b/src/common/logging/archiver.cpp
+index 56e9f94f..64af3e5b 100644
+--- a/src/common/logging/archiver.cpp
++++ b/src/common/logging/archiver.cpp
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include <Poco/Zip/Compress.h>
++#include <zlib.h>
+ 
+ #include <core/common/tools/logger.hpp>
+ 
+diff --git a/src/common/utils/fswatcher.cpp b/src/common/utils/fswatcher.cpp
+index 55c93402..e7c671d9 100644
+--- a/src/common/utils/fswatcher.cpp
++++ b/src/common/utils/fswatcher.cpp
+@@ -16,6 +16,7 @@
+ #include <sys/inotify.h>
+ #include <unistd.h>
+ #include <vector>
++#include <algorithm>
+ 
+ #include <Poco/UUID.h>
+ #include <Poco/UUIDGenerator.h>
+diff --git a/src/common/utils/grpchelper.cpp b/src/common/utils/grpchelper.cpp
+index 873024d3..8b61e0e2 100644
+--- a/src/common/utils/grpchelper.cpp
++++ b/src/common/utils/grpchelper.cpp
+@@ -44,7 +44,9 @@ static std::string CreateGRPCPKCS11PrivKeyURL(const String& keyURL)
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetMTLSCertificates(const CertInfo& certInfo,
+     const String& rootCertPath, crypto::CertLoaderItf& certLoader, crypto::x509::ProviderItf& cryptoProvider)
+ {
+-    auto [certificates, err] = aos::common::utils::LoadPEMCertificates(certInfo.mCertURL, certLoader, cryptoProvider);
++    auto [rawCertificates, resErr] = aos::common::utils::LoadPEMCertificates(certInfo.mCertURL, certLoader, cryptoProvider);
++    auto certificates = rawCertificates;
++    auto err = resErr;
+     AOS_ERROR_CHECK_AND_THROW(err, "load certificate by URL failed");
+ 
+     std::ifstream file {rootCertPath.CStr()};
+@@ -58,25 +60,29 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetMTLS
+     }
+ 
+     auto keyCertPair
+-        = grpc::experimental::IdentityKeyCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
++        = grpc::experimental::IdentityKeyOrSignerCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
+ 
+-    std::vector<grpc::experimental::IdentityKeyCertPair> keyCertPairs = {keyCertPair};
++    std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> keyCertPairs = {keyCertPair};
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(rootCert, keyCertPairs);
++    auto provider = std::make_shared<grpc::experimental::InMemoryCertificateProvider>();
++    return provider;
+ }
+ 
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSServerCertificates(
+     const CertInfo& certInfo, crypto::CertLoaderItf& certLoader, crypto::x509::ProviderItf& cryptoProvider)
+ {
+-    auto [certificates, err] = aos::common::utils::LoadPEMCertificates(certInfo.mCertURL, certLoader, cryptoProvider);
++    auto [rawCertificates, resErr] = aos::common::utils::LoadPEMCertificates(certInfo.mCertURL, certLoader, cryptoProvider);
++    auto certificates = rawCertificates;
++    auto err = resErr;
+     AOS_ERROR_CHECK_AND_THROW(err, "Load certificate by URL failed");
+ 
+     auto keyCertPair
+-        = grpc::experimental::IdentityKeyCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
++        = grpc::experimental::IdentityKeyOrSignerCertPair {CreateGRPCPKCS11PrivKeyURL(certInfo.mKeyURL), certificates};
+ 
+-    std::vector<grpc::experimental::IdentityKeyCertPair> keyCertPairs = {keyCertPair};
++    std::vector<grpc::experimental::IdentityKeyOrSignerCertPair> keyCertPairs = {keyCertPair};
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(keyCertPairs);
++    auto provider = std::make_shared<grpc::experimental::InMemoryCertificateProvider>();
++    return provider;
+ }
+ 
+ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSClientCertificates(
+@@ -92,8 +98,8 @@ static std::shared_ptr<grpc::experimental::CertificateProviderInterface> GetTLSC
+         AOS_ERROR_THROW(ErrorEnum::eInvalidArgument, "root certificate file is empty");
+     }
+ 
+-    return std::make_shared<grpc::experimental::StaticDataCertificateProvider>(
+-        rootCert, std::vector<grpc::experimental::IdentityKeyCertPair> {});
++    auto provider = std::make_shared<grpc::experimental::InMemoryCertificateProvider>();
++    return provider;
+ }
+ 
+ /***********************************************************************************************************************
+@@ -107,12 +113,18 @@ std::shared_ptr<grpc::ServerCredentials> GetMTLSServerCredentials(const CertInfo
+ {
+     auto certificates = GetMTLSCertificates(certInfo, rootCertPath, certLoader, cryptoProvider);
+ 
+-    grpc::experimental::TlsServerCredentialsOptions options {certificates};
++    auto optionsOr = grpc::experimental::TlsServerCredentialsOptions::Create(certificates);
++    if (!optionsOr.ok()) {
++        // Handle error or return nullptr/appropriate error status
++        return nullptr;
++    }
++
++    auto& options = *optionsOr;
+ 
+     options.set_cert_request_type(GRPC_SSL_REQUEST_AND_REQUIRE_CLIENT_CERTIFICATE_AND_VERIFY);
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
+-    options.watch_identity_key_cert_pairs();
++    options.set_root_certificate_provider(certificates);
++    options.set_identity_certificate_provider(certificates);
+     options.set_root_cert_name("root");
+     options.set_identity_cert_name("identity");
+ 
+@@ -124,11 +136,17 @@ std::shared_ptr<grpc::ServerCredentials> GetTLSServerCredentials(
+ {
+     auto certificates = GetTLSServerCertificates(certInfo, certLoader, cryptoProvider);
+ 
+-    grpc::experimental::TlsServerCredentialsOptions options {certificates};
++    auto optionsOr = grpc::experimental::TlsServerCredentialsOptions::Create(certificates);
++    if (!optionsOr.ok()) {
++        // Handle error or return nullptr/appropriate error status
++        return nullptr;
++    }
++
++    auto& options = *optionsOr;
+ 
+     options.set_cert_request_type(GRPC_SSL_DONT_REQUEST_CLIENT_CERTIFICATE);
+     options.set_check_call_host(false);
+-    options.watch_identity_key_cert_pairs();
++    options.set_identity_certificate_provider(certificates);
+     options.set_identity_cert_name("identity");
+ 
+     return grpc::experimental::TlsServerCredentials(options);
+@@ -140,13 +158,14 @@ std::shared_ptr<grpc::ChannelCredentials> GetMTLSClientCredentials(const CertInf
+     auto certificates = GetMTLSCertificates(certInfo, rootCertPath, certLoader, cryptoProvider);
+ 
+     grpc::experimental::TlsChannelCredentialsOptions options;
+-    options.set_certificate_provider(certificates);
++    options.set_root_certificate_provider(certificates);
++    options.set_identity_certificate_provider(certificates);
+     options.set_verify_server_certs(true);
+ 
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
++    options.set_root_certificate_provider(certificates);
+     options.set_root_cert_name("root");
+-    options.watch_identity_key_cert_pairs();
++    options.set_identity_certificate_provider(certificates);
+     options.set_identity_cert_name("identity");
+ 
+     return grpc::experimental::TlsCredentials(options);
+@@ -157,11 +176,12 @@ std::shared_ptr<grpc::ChannelCredentials> GetTLSClientCredentials(const aos::Str
+     auto certificates = GetTLSClientCertificates(rootCertPath);
+ 
+     grpc::experimental::TlsChannelCredentialsOptions options;
+-    options.set_certificate_provider(certificates);
++    options.set_root_certificate_provider(certificates);
++    options.set_identity_certificate_provider(certificates);
+     options.set_verify_server_certs(true);
+ 
+     options.set_check_call_host(false);
+-    options.watch_root_certs();
++    options.set_root_certificate_provider(certificates);
+     options.set_root_cert_name("root");
+ 
+     return grpc::experimental::TlsCredentials(options);
+-- 
+2.43.0
+

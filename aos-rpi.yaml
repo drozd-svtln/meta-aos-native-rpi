@@ -202,7 +202,7 @@ components:
 
       target_images:
         - "tmp/deploy/images/%{MACHINE}/bootfiles"
-        - "tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+        - "tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/boot.scr"
         - "tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
@@ -404,7 +404,7 @@ images:
         size: 512 MiB
         items:
           "/": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bootfiles"
-          "Image.gz": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+          "Image": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
           "u-boot": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
           "boot.scr": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/boot.scr"
           "bcm2712-rpi-5-b.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"

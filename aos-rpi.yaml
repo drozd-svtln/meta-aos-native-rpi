@@ -107,6 +107,8 @@ common_data:
     # Move TMPDIR to a native container path to avoid volume mount limits & boost I/O
     - [TMPDIR, "/home/builder/oe-tmp/%{OS_BUILD_DIR}"]
 
+    - [DEPLOY_DIR, "${TOPDIR}/tmp/deploy"]
+
   os_common_layers: &OS_COMMON_LAYERS
     - "../meta-virtualization"
     - "../meta-openembedded/meta-oe"
@@ -262,6 +264,8 @@ components:
 
         # RPI specific
         - [ENABLE_UART, "1"]
+
+        - [TMPDIR, "/home/builder/oe-tmp/%{INSTALL_BUILD_DIR}"]
 
       build_target: "%{AOS_INSTALL_IMAGE}"
       layers:

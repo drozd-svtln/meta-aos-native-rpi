@@ -1,0 +1,4 @@
+fdt addr ${fdt_addr}
+fatload @@BOOT_MEDIA@@ 0 @@KERNEL_IMG_ADDR@@ @@KERNEL_IMAGE@@
+setenv bootargs "@@OS_BOOTARGS@@"
+booti @@KERNEL_IMG_ADDR@@ - ${fdt_addr}

@@ -174,7 +174,7 @@ components:
         - [ENABLE_UART, "1"]
         - [UART_BOORLOADER, "1"]
         - [RPI_USE_U_BOOT, "1"]
-        - [PREFERRED_PROVIDER_u-boot-default-script, "u-boot-default-script"]
+        - [PREFERRED_PROVIDER_u-boot-default-script, "aos-rpi-u-boot-scr"]
         - [KERNEL_IMAGETYPE_UBOOT, "Image"]
         - [
             OS_BOOTARGS,

@@ -27,5 +27,4 @@ do_deploy:append:raspberrypi5() {
         bbfatal "armstub8-2712.bin was not built in ${B}"
     fi
     install -m 0644 "$ARMSTUB" ${DEPLOYDIR}/armstub8-2712.bin
-    install -m 0644 "$ARMSTUB" ${DEPLOY_DIR_IMAGE}/armstub8-2712.bin
 }

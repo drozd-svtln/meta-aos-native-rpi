@@ -17,8 +17,10 @@ KERNEL_IMAGE ?= "Image"
 KERNEL_IMG_ADDR ?= "0x10000000"
 OS_BOOTARGS ?= "console=ttyAMA10,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 
-# Must inherit before tasks that use oe.kernel.*
-inherit kernel-arch deploy nopackages
+# U-Boot architecture (arm64 for Pi 5)
+UBOOT_ARCH = "arm64"
+
+inherit deploy nopackages
 
 do_compile() {
     sed -e 's|@@BOOT_MEDIA@@|${BOOT_MEDIA}|g' \
@@ -27,7 +29,7 @@ do_compile() {
         -e 's|@@OS_BOOTARGS@@|${OS_BOOTARGS}|g' \
         "${UNPACKDIR}/boot.cmd.in" > "${WORKDIR}/boot.cmd"
 
-    mkimage -A ${@oe.kernel.map_uboot_arch(d)} -T script -C none -n "Boot script" \
+    mkimage -A ${UBOOT_ARCH} -T script -C none -n "Boot script" \
         -d "${WORKDIR}/boot.cmd" boot.scr
 }
 

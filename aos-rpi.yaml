@@ -80,7 +80,7 @@ common_data:
     - [INIT_MANAGER, "systemd"]
 
     # Serial console
-    - [SERIAL_CONSOLES, "115200;ttyAMA0"]
+    - [SERIAL_CONSOLES, "115200;ttyAMA10"]
 
     # Skip warning about missing "virtualization" distro feature
     - [SKIP_META_VIRT_SANITY_CHECK, "1"]
@@ -172,12 +172,14 @@ components:
 
         # RPI specific
         - [ENABLE_UART, "1"]
+        - [UART_BOORLOADER, "1"]
         - [RPI_USE_U_BOOT, "1"]
         - [PREFERRED_PROVIDER_u-boot-default-script, "u-boot-default-script"]
         - [KERNEL_IMAGETYPE_UBOOT, "Image"]
         - [
             OS_BOOTARGS,
-            "console=ttyAMA0,115200 root=/dev/%{OS_BLK_DEV}1 rootfstype=ext4 rootwait quiet ro
+            "console=ttyAMA10,115200 clk_ignore_unused
+            root=/dev/%{OS_BLK_DEV}1 rootfstype=ext4 rootwait ro pci=pcie_bus_perf
             cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 cgroup_enable=memory
             ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '%{SELINUX_BOOT_ARGS}', '', d)}
             vardir.disk=/dev/%{OS_BLK_DEV}2

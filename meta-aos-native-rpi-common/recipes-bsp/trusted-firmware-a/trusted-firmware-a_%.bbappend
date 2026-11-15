@@ -20,3 +20,12 @@ do_compile:append:raspberrypi5() {
     dd if=${DEPLOY_DIR_IMAGE}/optee/tee-raw.bin of=${B}/armstub8-2712.bin \
        bs=1024 seek=512 conv=notrunc
 }
+
+do_deploy:append:raspberrypi5() {
+    ARMSTUB=$(find ${B} -name armstub8-2712.bin | head -1)
+    if [ -z "$ARMSTUB" ]; then
+        bbfatal "armstub8-2712.bin was not built in ${B}"
+    fi
+    install -m 0644 "$ARMSTUB" ${DEPLOYDIR}/armstub8-2712.bin
+    install -m 0644 "$ARMSTUB" ${DEPLOY_DIR_IMAGE}/armstub8-2712.bin
+}

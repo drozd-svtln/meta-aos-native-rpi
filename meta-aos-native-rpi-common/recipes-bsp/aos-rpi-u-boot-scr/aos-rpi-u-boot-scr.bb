@@ -17,6 +17,9 @@ KERNEL_IMAGE ?= "Image"
 KERNEL_IMG_ADDR ?= "0x10000000"
 OS_BOOTARGS ?= "console=ttyAMA10,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 
+# Must inherit before tasks that use oe.kernel.*
+inherit kernel-arch deploy nopackages
+
 do_compile() {
     sed -e 's|@@BOOT_MEDIA@@|${BOOT_MEDIA}|g' \
         -e 's|@@KERNEL_IMAGE@@|${KERNEL_IMAGE}|g' \
@@ -27,8 +30,6 @@ do_compile() {
     mkimage -A ${@oe.kernel.map_uboot_arch(d)} -T script -C none -n "Boot script" \
         -d "${WORKDIR}/boot.cmd" boot.scr
 }
-
-inherit kernel-arch deploy nopackages
 
 do_deploy() {
     install -d ${DEPLOYDIR}

@@ -204,6 +204,7 @@ components:
 
       target_images:
         - "tmp/deploy/images/%{MACHINE}/bootfiles"
+        - "tmp/deploy/images/%{MACHINE}/armstub8-2712.bin"
         - "tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/boot.scr"
@@ -406,6 +407,7 @@ images:
         size: 512 MiB
         items:
           "/": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bootfiles"
+          "armstub8-2712.bin": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/armstub8-2712.bin"
           "Image": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
           "u-boot": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
           "boot.scr": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/boot.scr"

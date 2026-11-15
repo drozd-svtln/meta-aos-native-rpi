@@ -20,8 +20,7 @@ do_image[depends] += " \
     ${@bb.utils.contains('RPI_USE_U_BOOT', '1', 'u-boot-default-script:do_deploy', '', d)} \
 "
 
-# Phase 2 (OP-TEE): uncomment once the TF-A bbappend for raspberrypi5 exists
-# do_image[depends] += "trusted-firmware-a:do_deploy"
+do_image[depends] += "trusted-firmware-a:do_deploy"
 
 # Basic packages (as in meta-aos-rpi, Xen packages removed)
 PACKAGE_INSTALL:append = " \

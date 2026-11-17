@@ -209,6 +209,9 @@ components:
         - "tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/boot.scr"
         - "tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+        - "tmp/deploy/images/%{MACHINE}/overlay_map.dtb"
+        - "tmp/deploy/images/%{MACHINE}/bcm2712d0.dtbo"
+        - "tmp/deploy/images/%{MACHINE}/vc4-kms-v3d-pi5.dtbo"
         - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
         - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}-var.ext4"
         - "tmp/deploy/images/%{MACHINE}/aos/boot/version"
@@ -412,6 +415,10 @@ images:
           "u-boot": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
           "boot.scr": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/boot.scr"
           "bcm2712-rpi-5-b.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+          # Applied by the firmware on D0 stepping boards (e.g. RPI5 2GB, 16GB)
+          "overlays/bcm2712d0.dtbo": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712d0.dtbo"
+          "overlays/overlay_map.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/overlay_map.dtb"
+          "overlays/vc4-kms-v3d-pi5.dtbo": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/vc4-kms-v3d-pi5.dtbo"
           "aos/version": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/aos/boot/version"
 
   rootfs-%{NODE_TYPE}-%{OS_ROOT}:

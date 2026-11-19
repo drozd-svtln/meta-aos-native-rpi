@@ -1,7 +1,7 @@
-From b550325e7afabe62227561d6cba80c446f2fa189 Mon Sep 17 00:00:00 2001
+From dca9e9f97b59c8976ce6950e80d9978fac1c23bf Mon Sep 17 00:00:00 2001
 From: Svitlana Drozd <svitlana_drozd@epam.com>
 Date: Thu, 12 Nov 2026 17:03:35 +0200
-Subject: [PATCH] fix for gcc 15 (part 2)
+Subject: [PATCH 2/2] fix for gcc 15 (part 2)
 
 Upstream-Status: Pending
 Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>

@@ -2,13 +2,7 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "\
     file://optee-identity.conf \
-    file://0001-common-utils-fswatcher-fix-compilation-with-GCC-15.patch \
-    file://0002-core-increase-AOS_STACK_USAGE-limit-to-16384.patch \
-    file://0003-change-lib-to-custom.patch \
-    file://0004-fix-deprecated-declarations-warnings.patch \
-    file://0005-depracated-2.patch \
-    file://0006-deprecated-3.patch \
-    file://0007-fix-Z_BEST_COMPRESSION-not-declared.patch \
+    file://0001-fix-for-gcc-15.patch \
 "
 
 EXTRA_OECMAKE += "-DCMAKE_CXX_FLAGS='-Wno-error=deprecated-declarations -Wno-stack-usage'"

@@ -11,6 +11,8 @@ clear_disks() {
     /opt/aos/setupdisk.sh delete
 
     sync
+
+    systemctl reboot
 }
 
 remove_firewall_rules() {

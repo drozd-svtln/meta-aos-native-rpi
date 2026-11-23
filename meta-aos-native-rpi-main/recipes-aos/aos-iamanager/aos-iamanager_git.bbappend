@@ -2,7 +2,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += " \
     file://iam.cfg \
-    file://0001-fix-for-gcc-15.patch \
 "
 
 do_install:append() {

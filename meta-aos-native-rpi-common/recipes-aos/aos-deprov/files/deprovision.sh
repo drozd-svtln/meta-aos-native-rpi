@@ -32,7 +32,9 @@ deprovision_async() {
         echo "Restore unprovisioned flag" | systemd-cat
         rm /var/aos/.provisionstate -f
 
-        systemctl start aos.target
+        # Native single-node build: aos-iam-prov has no ExecStartPre cleanup (remove-deprovision.conf),
+        # so clear IAM DB, OP-TEE storage and Aos disks here. clear_disks reboots the unit at the end.
+        clear_disks
     } > /dev/null 2>&1 &
 }
 

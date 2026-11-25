@@ -1,3 +1,5 @@
+OS_NAME ?= "native"
+
 IMAGE_NAME = "initramfs-${OS_NAME}"
 IMAGE_NAME_SUFFIX = ""
 

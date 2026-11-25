@@ -80,7 +80,7 @@ common_data:
     - [INIT_MANAGER, "systemd"]
 
     # Serial console
-    - [SERIAL_CONSOLES, "115200;ttyAMA0"]
+    - [SERIAL_CONSOLES, "115200;ttyAMA10"]
 
     # Skip warning about missing "virtualization" distro feature
     - [SKIP_META_VIRT_SANITY_CHECK, "1"]
@@ -172,12 +172,14 @@ components:
 
         # RPI specific
         - [ENABLE_UART, "1"]
+        - [UART_BOORLOADER, "1"]
         - [RPI_USE_U_BOOT, "1"]
-        - [PREFERRED_PROVIDER_u-boot-default-script, "u-boot-default-script"]
+        - [PREFERRED_PROVIDER_u-boot-default-script, "aos-rpi-u-boot-scr"]
         - [KERNEL_IMAGETYPE_UBOOT, "Image"]
         - [
             OS_BOOTARGS,
-            "console=ttyAMA0,115200 root=/dev/%{OS_BLK_DEV}1 rootfstype=ext4 rootwait quiet ro
+            "console=ttyAMA10,115200 clk_ignore_unused
+            root=/dev/%{OS_BLK_DEV}1 rootfstype=ext4 rootwait ro pci=pcie_bus_perf
             cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 cgroup_enable=memory
             ${@bb.utils.contains('DISTRO_FEATURES', 'selinux', '%{SELINUX_BOOT_ARGS}', '', d)}
             vardir.disk=/dev/%{OS_BLK_DEV}2
@@ -202,10 +204,14 @@ components:
 
       target_images:
         - "tmp/deploy/images/%{MACHINE}/bootfiles"
-        - "tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+        - "tmp/deploy/images/%{MACHINE}/armstub8-2712.bin"
+        - "tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
         - "tmp/deploy/images/%{MACHINE}/boot.scr"
         - "tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+        - "tmp/deploy/images/%{MACHINE}/overlay_map.dtb"
+        - "tmp/deploy/images/%{MACHINE}/bcm2712d0.dtbo"
+        - "tmp/deploy/images/%{MACHINE}/vc4-kms-v3d-pi5.dtbo"
         - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}.rootfs.ext4"
         - "tmp/deploy/images/%{MACHINE}/%{AOS_BASE_IMAGE}-%{MACHINE}-var.ext4"
         - "tmp/deploy/images/%{MACHINE}/aos/boot/version"
@@ -404,10 +410,15 @@ images:
         size: 512 MiB
         items:
           "/": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bootfiles"
-          "Image.gz": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image.gz-initramfs-%{MACHINE}.bin"
+          "armstub8-2712.bin": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/armstub8-2712.bin"
+          "Image": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/Image-initramfs-%{MACHINE}.bin"
           "u-boot": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/u-boot-%{MACHINE}.bin"
           "boot.scr": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/boot.scr"
           "bcm2712-rpi-5-b.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712-rpi-5-b.dtb"
+          # Applied by the firmware on D0 stepping boards (e.g. RPI5 2GB, 16GB)
+          "overlays/bcm2712d0.dtbo": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/bcm2712d0.dtbo"
+          "overlays/overlay_map.dtb": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/overlay_map.dtb"
+          "overlays/vc4-kms-v3d-pi5.dtbo": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/vc4-kms-v3d-pi5.dtbo"
           "aos/version": "%{YOCTOS_WORK_DIR}/%{OS_BUILD_DIR}/tmp/deploy/images/%{MACHINE}/aos/boot/version"
 
   rootfs-%{NODE_TYPE}-%{OS_ROOT}:

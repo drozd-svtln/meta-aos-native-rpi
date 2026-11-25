@@ -1,0 +1,16 @@
+[Unit]
+Description=Refresh Aos LVM volumes activated in initramfs
+DefaultDependencies=no
+After=systemd-udev-trigger.service
+Before=local-fs-pre.target
+Wants=local-fs-pre.target
+ConditionPathExists=/dev/mapper/aos
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/sbin/vgchange --refresh aosvg
+ExecStart=/usr/bin/udevadm settle
+
+[Install]
+WantedBy=local-fs-pre.target

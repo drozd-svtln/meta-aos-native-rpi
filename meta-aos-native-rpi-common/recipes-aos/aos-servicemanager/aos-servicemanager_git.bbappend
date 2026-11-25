@@ -1,7 +1,5 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-S = "${UNPACKDIR}"
-
 DEPENDS:append = " efivar"
 
 SRC_URI += "\

@@ -1,0 +1,27 @@
+From 8c08b6ceccd8c337c80f87521ca36229b183ddfb Mon Sep 17 00:00:00 2001
+From: Svitlana Drozd <svitlana_drozd@epam.com>
+Date: Thu, 12 Nov 2026 17:03:35 +0200
+Subject: [PATCH] add missed include
+
+Upstream-Status: Pending
+Signed-off-by: Svitlana Drozd <svitlana_drozd@epam.com>
+---
+ src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp b/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
+index d1ba5f17..a61d9367 100644
+--- a/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
++++ b/src/sm/launcher/runtimes/utils/systemdupdatechecker.cpp
+@@ -6,6 +6,8 @@
+ 
+ #include <unordered_map>
+ 
++#include <algorithm>
++
+ #include <common/utils/retry.hpp>
+ #include <core/common/tools/logger.hpp>
+ 
+-- 
+2.43.0
+

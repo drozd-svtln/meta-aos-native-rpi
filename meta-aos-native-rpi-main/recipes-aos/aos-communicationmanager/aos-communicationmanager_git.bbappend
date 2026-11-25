@@ -2,7 +2,10 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "\
     file://optee-identity.conf \
+    file://0001-fix-for-gcc-15.patch \
 "
+
+EXTRA_OECMAKE += "-DCMAKE_CXX_FLAGS='-Wno-error=deprecated-declarations -Wno-stack-usage'"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/systemd/system/aos-cm.service.d

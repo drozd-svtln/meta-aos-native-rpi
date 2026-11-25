@@ -4,6 +4,7 @@ SRC_URI:append = " \
     file://optee-identity.conf \
     file://grpc-dns-resolver.conf \
     file://remove-deprovision.conf \
+    file://0001-fix-for-gcc-15.patch \
 "
 
 RDEPENDS:${PN} += "\
